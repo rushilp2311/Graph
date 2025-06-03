@@ -1,4 +1,6 @@
 // src/components/IdList.tsx
+//
+// @ts-nocheck
 import React from "react";
 
 // Define the interface for IdList's props

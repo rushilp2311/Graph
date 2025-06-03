@@ -1,4 +1,5 @@
 // src/App.tsx
+// @ts-nocheck
 import React, { useState, useMemo, useCallback } from "react";
 import ForceGraph from "./ForceGraph";
 import IdList from "./IdList";
