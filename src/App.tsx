@@ -1,351 +1,394 @@
-// src/App.tsx
-// @ts-nocheck
-import React, { useState, useMemo, useCallback } from "react";
-import ForceGraph from "./ForceGraph";
-import IdList from "./IdList";
-import "./App.css";
-import {
-  type GraphNode,
-  type Link,
-  type GraphData,
-  type IdRelationships,
-} from "./types"; // Import types
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+} from "react";
+import * as d3 from "d3";
+import { rawGraphData } from "./data";
+// Define TypeScript interfaces for your data
+interface Node {
+  id: string;
+  group: number; // For unique coloring
+  degree: number; // Number of connections (total degree)
+  x?: number;
+  y?: number;
+  fx?: number | null;
+  fy?: number | null;
+}
 
-function App(): any {
-  // Use IdRelationships interface for idRelationships
-  const idRelationships: IdRelationships = {
-    5: new Set([57, 296, 377]),
-    57: new Set([5, 296, 506]),
-    296: new Set([5, 34, 57]),
-    377: new Set([5]),
-    25: new Set([143]),
-    143: new Set([
-      25, 46, 92, 116, 145, 146, 171, 256, 260, 262, 280, 300, 384, 388, 390,
-      574, 673, 680,
-    ]),
-    28: new Set([48]),
-    48: new Set([28]),
-    32: new Set([114, 117, 379, 638, 639, 681]),
-    114: new Set([32, 117, 379, 525, 544, 638]),
-    117: new Set([32, 114, 525]),
-    379: new Set([32, 114]),
-    638: new Set([32, 114, 639, 681, 682]),
-    639: new Set([32, 638, 681]),
-    681: new Set([32, 638, 639, 682]),
-    34: new Set([168, 296, 525]),
-    168: new Set([34]),
-    525: new Set([34, 114, 117]),
-    46: new Set([143]),
-    47: new Set([148, 154, 175, 223, 225, 226, 274, 295, 345, 661, 683]),
-    148: new Set([47, 345]),
-    154: new Set([47, 295]),
-    175: new Set([47, 274, 295, 345]),
-    223: new Set([47, 295]),
-    225: new Set([47, 295]),
-    226: new Set([47, 295]),
-    274: new Set([47, 175, 295]),
-    295: new Set([47, 154, 175, 223, 225, 226, 274, 661, 683]),
-    345: new Set([47, 148, 175, 252, 274]),
-    661: new Set([47, 173, 295, 513]),
-    683: new Set([47, 295]),
-    49: new Set([177, 179, 195]),
-    177: new Set([49, 157, 179, 190]),
-    179: new Set([49, 177, 187, 190, 195]),
-    195: new Set([49, 179]),
-    52: new Set([353]),
-    353: new Set([52, 294]),
-    506: new Set([56, 57]),
-    60: new Set([161]),
-    161: new Set([60]),
-    63: new Set([291]),
-    291: new Set([63]),
-    69: new Set([544]),
-    544: new Set([
-      69, 78, 103, 114, 116, 146, 171, 176, 231, 256, 260, 280, 300, 384, 388,
-      390, 426, 574, 673,
-    ]),
-    71: new Set([418, 664]),
-    418: new Set([71, 417, 664]),
-    664: new Set([71, 417, 418]),
-    78: new Set([79, 286, 544]),
-    79: new Set([78, 543, 665]),
-    286: new Set([78, 665]),
-    543: new Set([79]),
-    665: new Set([79, 286]),
-    92: new Set([143, 145]),
-    145: new Set([92, 143]),
-    97: new Set([103]),
-    103: new Set([97, 544]),
-    102: new Set([104]),
-    104: new Set([105, 382, 102]),
-    105: new Set([104]),
-    109: new Set([211]),
-    211: new Set([109, 459, 526]),
-    382: new Set([104]),
-    115: new Set([139, 236, 241, 306, 312, 675]),
-    139: new Set([115, 236, 239, 306, 308, 310, 475, 480, 481, 482, 483]),
-    236: new Set([115, 139, 238, 239, 482]),
-    241: new Set([115, 116, 266, 306, 308, 310, 312, 475, 476, 480, 481]),
-    306: new Set([115, 139, 241]),
-    312: new Set([115, 241]),
-    675: new Set([115, 116]),
-    116: new Set([143, 241, 544, 675]),
-    146: new Set([143, 174, 544]),
-    121: new Set([516]),
-    516: new Set([121, 311]),
-    126: new Set([341]),
-    341: new Set([126]),
-    132: new Set([164, 166]),
-    164: new Set([132, 166]),
-    166: new Set([132, 164]),
-    136: new Set([174, 271, 299, 328, 340]),
-    174: new Set([136, 146, 271, 299, 328]),
-    271: new Set([136, 174, 299, 340]),
-    299: new Set([136, 174, 271, 328, 340]),
-    328: new Set([136, 174, 299, 340]),
-    340: new Set([136, 271, 299, 328]),
-    239: new Set([139, 236, 238, 482, 483]),
-    482: new Set([139, 236, 238, 239, 403, 480, 481]),
-    483: new Set([139, 239]),
-    238: new Set([236, 239, 482]),
-    256: new Set([143, 280, 389, 544]),
-    260: new Set([143, 203, 249, 336, 467, 544]),
-    262: new Set([143]),
-    280: new Set([143, 256, 544]),
-    300: new Set([143, 544]),
-    384: new Set([143, 544]),
-    388: new Set([143, 544]),
-    390: new Set([143, 544]),
-    574: new Set([143, 544]),
-    673: new Set([143, 544]),
-    680: new Set([143]),
-    144: new Set([676, 677]),
-    676: new Set([144, 375, 677]),
-    677: new Set([144, 676]),
-    153: new Set([186, 318]),
-    186: new Set([153, 272]),
-    318: new Set([153]),
-    252: new Set([345]),
-    157: new Set([177, 213]),
-    213: new Set([157]),
-    171: new Set([143, 544]),
-    173: new Set([472, 513, 661]),
-    472: new Set([173]),
-    513: new Set([173, 661]),
-    176: new Set([544]),
-    187: new Set([179]),
-    190: new Set([177, 179]),
-    180: new Set([323]),
-    323: new Set([180]),
-    183: new Set([185]),
-    185: new Set([183]),
-    272: new Set([186]),
-    191: new Set([192, 235, 326, 339, 365, 467, 529]),
-    192: new Set([191, 235, 326, 339, 365, 467, 529]),
-    235: new Set([191, 192, 326, 339, 365, 467, 529]),
-    326: new Set([191, 192, 235, 339, 365, 467, 529]),
-    339: new Set([191, 192, 235, 326, 365, 467, 529]),
-    365: new Set([191, 192, 235, 326, 339, 467, 529]),
-    467: new Set([191, 192, 203, 235, 249, 260, 326, 339, 365, 529]),
-    529: new Set([191, 192, 235, 326, 339, 365, 467]),
-    194: new Set([261, 275, 375]),
-    261: new Set([194, 275, 375]),
-    275: new Set([261, 375]),
-    375: new Set([261, 275, 676, 303]),
-    197: new Set([268]),
-    268: new Set([197, 208, 217, 257, 351]),
-    203: new Set([249, 260, 336, 467]),
-    249: new Set([203, 260, 336, 467]),
-    336: new Set([203, 249, 260]),
-    208: new Set([268]),
-    459: new Set([211]),
-    526: new Set([211]),
-    217: new Set([268]),
-    227: new Set([437]),
-    437: new Set([227]),
-    230: new Set([660]),
-    660: new Set([230]),
-    231: new Set([544]),
-    240: new Set([634]),
-    634: new Set([240]),
-    266: new Set([241]),
-    308: new Set([139, 241]),
-    310: new Set([139, 241]),
-    475: new Set([139, 241]),
-    476: new Set([241]),
-    480: new Set([139, 241, 482]),
-    481: new Set([139, 241, 482]),
-    242: new Set([287, 552]),
-    287: new Set([242, 243, 244, 245, 246, 282, 570, 571, 572, 573]),
-    552: new Set([242]),
-    243: new Set([287]),
-    244: new Set([287]),
-    245: new Set([287]),
-    246: new Set([287]),
-    257: new Set([268]),
-    258: new Set([322]),
-    322: new Set([258]),
-    270: new Set([667]),
-    667: new Set([270]),
-    278: new Set([297]),
-    297: new Set([278]),
-    282: new Set([287]),
-    570: new Set([287]),
-    571: new Set(),
-    572: new Set([287]),
-    573: new Set([287]),
-    293: new Set([294]),
-    294: new Set([293, 353]),
-    303: new Set([375]),
-    311: new Set([516]),
-    351: new Set([268]),
-    389: new Set([256]),
-    403: new Set([482]),
-    417: new Set([418, 664]),
-    426: new Set([544]),
-    578: new Set([579]),
-    579: new Set([578]),
-    682: new Set([638, 681]),
-  };
+interface Link {
+  source: string | Node;
+  target: string | Node;
+  value: number; // Defaulting to 1 as new format doesn't specify values
+}
 
-  const [selectedIds, setSelectedIds] = useState<number[]>([]); // Type state as array of numbers
+interface GraphData {
+  nodes: Node[];
+  links: Link[];
+}
 
-  const allUniqueIds = useMemo<number[]>(() => {
-    // Type useMemo return
-    const ids = new Set<number>(); // Type Set
-    for (const sourceIdStr in idRelationships) {
-      ids.add(parseInt(sourceIdStr));
-      idRelationships[sourceIdStr].forEach((targetId: number) =>
-        ids.add(targetId),
-      ); // Type targetId
-    }
-    return Array.from(ids).sort((a, b) => a - b);
-  }, [idRelationships]);
+// Function to transform the raw data into D3's expected format
+const transformData = (rawData: { [key: string]: string[] }): GraphData => {
+  const nodesMap = new Map<string, Node>();
+  const links: Link[] = [];
+  const nodeDegrees = new Map<string, number>(); // Stores total degree
 
-  const generateGraphData = useMemo<GraphData>(() => {
-    // Type useMemo return as GraphData
-    const nodes: GraphNode[] = []; // Type nodes array
-    const links: Link[] = []; // Type links array
-    const nodeIdsInSubgraph = new Set<number>();
-
-    if (selectedIds.length === 0) {
-      for (const sourceIdStr in idRelationships) {
-        const sourceId = parseInt(sourceIdStr);
-        if (!nodeIdsInSubgraph.has(sourceId)) {
-          nodes.push({ id: sourceId });
-          nodeIdsInSubgraph.add(sourceId);
-        }
-        idRelationships[sourceIdStr].forEach((targetId: number) => {
-          if (!nodeIdsInSubgraph.has(targetId)) {
-            nodes.push({ id: targetId });
-            nodeIdsInSubgraph.add(targetId);
-          }
-          const isLinkExist = links.some(
-            (link) =>
-              (link.source === sourceId && link.target === targetId) ||
-              (link.source === targetId && link.target === sourceId),
-          );
-          if (!isLinkExist) {
-            links.push({ source: sourceId, target: targetId });
-          }
-        });
-      }
-    } else {
-      const nodesToProcess = new Set<number>(selectedIds);
-      const visitedNodes = new Set<number>();
-
-      nodesToProcess.forEach((mainId: number) => {
-        // Type mainId
-        if (visitedNodes.has(mainId)) return;
-        visitedNodes.add(mainId);
-
-        if (!nodeIdsInSubgraph.has(mainId)) {
-          nodes.push({ id: mainId, isSelected: selectedIds.includes(mainId) });
-          nodeIdsInSubgraph.add(mainId);
-        }
-
-        const connectedFromMain = idRelationships[mainId] || new Set<number>();
-        connectedFromMain.forEach((targetId: number) => {
-          // Type targetId
-          if (!nodeIdsInSubgraph.has(targetId)) {
-            nodes.push({ id: targetId });
-            nodeIdsInSubgraph.add(targetId);
-          }
-          const isLinkExist = links.some(
-            (link) =>
-              (link.source === mainId && link.target === targetId) ||
-              (link.source === targetId && link.target === mainId),
-          );
-          if (!isLinkExist) {
-            links.push({ source: mainId, target: targetId });
-          }
-        });
-
-        for (const sourceIdStr in idRelationships) {
-          const sourceId = parseInt(sourceIdStr);
-          if (idRelationships[sourceIdStr].has(mainId) && sourceId !== mainId) {
-            if (!nodeIdsInSubgraph.has(sourceId)) {
-              nodes.push({ id: sourceId });
-              nodeIdsInSubgraph.add(sourceId);
-            }
-            const isLinkExist = links.some(
-              (link) =>
-                (link.source === sourceId && link.target === mainId) ||
-                (link.source === mainId && link.target === sourceId),
-            );
-            if (!isLinkExist) {
-              links.push({ source: sourceId, target: mainId });
-            }
-          }
-        }
+  // First pass: Identify all unique nodes and initialize their degrees to 0
+  const allUniqueIds = new Set<string>();
+  for (const sourceId in rawData) {
+    if (Object.prototype.hasOwnProperty.call(rawData, sourceId)) {
+      allUniqueIds.add(sourceId);
+      rawData[sourceId].forEach((targetId) => {
+        allUniqueIds.add(targetId);
       });
     }
-    return { nodes, links };
-  }, [selectedIds, idRelationships]);
+  }
+  allUniqueIds.forEach((id) => nodeDegrees.set(id, 0));
 
-  const handleIdListClick = useCallback((id: number) => {
-    // Type id
-    setSelectedIds([id]);
-  }, []);
+  // Second pass: Calculate degrees (in-degree + out-degree) and create links
+  for (const sourceId in rawData) {
+    if (Object.prototype.hasOwnProperty.call(rawData, sourceId)) {
+      // Add out-degree for the source node
+      nodeDegrees.set(
+        sourceId,
+        (nodeDegrees.get(sourceId) || 0) + rawData[sourceId].length,
+      );
 
-  const handleShowAllGraph = useCallback(() => {
-    setSelectedIds([]);
-  }, []);
+      rawData[sourceId].forEach((targetId) => {
+        links.push({ source: sourceId, target: targetId, value: 1 });
+      });
+    }
+  }
 
-  const handleNodeClickInGraph = useCallback((nodeId: number) => {
-    // Type nodeId
-    setSelectedIds((prevSelectedIds) => {
-      if (prevSelectedIds.includes(nodeId)) {
-        return prevSelectedIds.filter((id) => id !== nodeId);
-      } else {
-        return [...prevSelectedIds, nodeId];
-      }
+  // Third pass: Create final node objects with assigned groups and calculated degrees
+  let groupCounter = 0;
+  const finalNodes: Node[] = Array.from(allUniqueIds)
+    .sort() // Sort for consistent group assignment
+    .map((nodeId) => {
+      return {
+        id: nodeId,
+        group: groupCounter++, // Assign unique group for coloring
+        degree: nodeDegrees.get(nodeId) || 0, // Assign the calculated total degree
+      } as Node;
     });
-  }, []);
+
+  return {
+    nodes: finalNodes,
+    links: links,
+  };
+};
+
+const App: React.FC = () => {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null); // State to filter graph
+  const [searchTerm, setSearchTerm] = useState<string>(""); // State for search input
+
+  // Transform the raw data once to get the full graph data
+  const fullGraphData = transformData(rawGraphData);
+
+  // Extract unique source IDs for the sidebar directly from the rawGraphData format
+  const allUniqueSourceIds = useMemo(() => Object.keys(rawGraphData), []);
+
+  // Filter unique source IDs based on search term
+  const filteredUniqueSourceIds = useMemo(() => {
+    return allUniqueSourceIds.filter((id) =>
+      id.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [allUniqueSourceIds, searchTerm]);
+
+  // Filtered graph data based on selectedSourceId
+  const getFilteredGraphData = useCallback(
+    (sourceId: string | null): GraphData => {
+      if (!sourceId) {
+        return fullGraphData; // Return full graph if no source is selected
+      }
+
+      const filteredLinks: Link[] = fullGraphData.links.filter(
+        (link) =>
+          (link.source as Node).id === sourceId || link.source === sourceId,
+      );
+
+      const filteredNodesMap = new Map<string, Node>();
+      filteredLinks.forEach((link) => {
+        const sourceNode = fullGraphData.nodes.find(
+          (n) => n.id === (link.source as Node).id || n.id === link.source,
+        );
+        const targetNode = fullGraphData.nodes.find(
+          (n) => n.id === (link.target as Node).id || n.id === link.target,
+        );
+        if (sourceNode) filteredNodesMap.set(sourceNode.id, sourceNode);
+        if (targetNode) filteredNodesMap.set(targetNode.id, targetNode);
+      });
+
+      return {
+        nodes: Array.from(filteredNodesMap.values()),
+        links: filteredLinks,
+      };
+    },
+    [fullGraphData],
+  );
+
+  // Derive the current graph data based on selection
+  const currentGraphData = getFilteredGraphData(selectedSourceId);
+
+  // Use useLayoutEffect to get dimensions synchronously after DOM mutations
+  useLayoutEffect(() => {
+    const updateDimensions = () => {
+      if (svgRef.current && svgRef.current.parentElement) {
+        const { width, height } =
+          svgRef.current.parentElement.getBoundingClientRect();
+        setDimensions({ width, height });
+      }
+    };
+
+    updateDimensions(); // Set initial dimensions
+    window.addEventListener("resize", updateDimensions); // Add resize listener
+
+    return () => {
+      window.removeEventListener("resize", updateDimensions); // Clean up
+    };
+  }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
+
+  useEffect(() => {
+    // Only proceed with D3 rendering if dimensions are valid
+    if (!svgRef.current || dimensions.width === 0 || dimensions.height === 0)
+      return;
+
+    const svg = d3
+      .select(svgRef.current)
+      .attr("width", dimensions.width)
+      .attr("height", dimensions.height)
+      .attr("viewBox", `0 0 ${dimensions.width} ${dimensions.height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
+
+    svg.selectAll("*").remove(); // Clear previous elements
+
+    // Create a group element for the graph to apply transformations (zoom/pan)
+    const g = svg.append("g");
+
+    // Create a deep copy of the current data for D3 simulation
+    const nodes: Node[] = currentGraphData.nodes.map((d) => ({ ...d }));
+    const links: d3.SimulationLinkDatum<Node>[] = currentGraphData.links.map(
+      (d) => ({ ...d }),
+    );
+
+    // Define color scale for nodes to ensure each has a different color
+    const color = d3.scaleOrdinal(
+      d3.quantize(d3.interpolateRainbow, nodes.length),
+    );
+
+    // Initialize the force simulation
+    const simulation = d3
+      .forceSimulation<Node, d3.SimulationLinkDatum<Node>>(nodes)
+      .force(
+        "link",
+        d3
+          .forceLink(links)
+          .id((d: any) => d.id)
+          .distance(150),
+      ) // Increased link distance
+      .force("charge", d3.forceManyBody().strength(-800)) // Increased repulsion strength
+      .force("collide", d3.forceCollide().radius(25)) // Added forceCollide to prevent node overlap
+      .force(
+        "center",
+        d3.forceCenter(dimensions.width / 2, dimensions.height / 2),
+      );
+
+    // Add links to the SVG
+    const link = g
+      .append("g")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke-width", (d) => Math.sqrt(d.value));
+
+    // Add nodes to the SVG
+    const node = g
+      .append("g")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .selectAll("circle")
+      .data(nodes)
+      .join("circle")
+      .attr("r", 10)
+      .attr("fill", (d) => color(d.group.toString())) // Color nodes by their unique group
+      .call(drag(simulation) as any); // Apply drag behavior
+
+    // Add text labels (IDs) to nodes (outside)
+    const labels = g
+      .append("g")
+      .attr("class", "labels")
+      .selectAll("text.node-id") // Use a class to distinguish
+      .data(nodes)
+      .join("text")
+      .attr("class", "node-id")
+      .attr("dx", 12) // Offset from circle
+      .attr("dy", ".35em")
+      .text((d) => d.id)
+      .style("font-size", "9px")
+      .style("fill", "#000")
+      .style("pointer-events", "none")
+      .style("opacity", 0.3)
+      .style(
+        "text-shadow",
+        "0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff",
+      );
+
+    // Add degree text (numbers) inside the nodes
+    const degreeText = g
+      .append("g")
+      .attr("class", "degree-labels")
+      .selectAll("text.node-degree") // Use a class to distinguish
+      .data(nodes)
+      .join("text")
+      .attr("class", "node-degree")
+      .attr("text-anchor", "middle") // Center horizontally
+      .attr("dominant-baseline", "central") // Center vertically
+      .text((d) => d.degree.toString()) // Display the degree
+      .style("font-size", "8px") // Adjust font size to fit inside circle
+      .style("fill", "#fff") // White text for contrast on colored nodes
+      .style("pointer-events", "none"); // Prevent text from interfering with hover/click
+
+    // Add hover effects for nodes and labels
+    node
+      .on("mouseover", function (event, d) {
+        d3.select(this).transition().duration(100).attr("r", 12);
+        labels
+          .filter((l: Node) => l.id === d.id)
+          .transition()
+          .duration(100)
+          .style("opacity", 1)
+          .style("font-size", "11px");
+        labels
+          .filter((l: Node) => l.id !== d.id)
+          .transition()
+          .duration(100)
+          .style("opacity", 0.1);
+        degreeText
+          .filter((l: Node) => l.id === d.id) // Also affect degree text on hover
+          .transition()
+          .duration(100)
+          .style("font-size", "10px"); // Slightly larger on hover
+      })
+      .on("mouseout", function (event, d) {
+        d3.select(this).transition().duration(100).attr("r", 10);
+        labels
+          .transition()
+          .duration(100)
+          .style("opacity", 0.3)
+          .style("font-size", "9px");
+        degreeText
+          .transition()
+          .duration(100) // Revert degree text
+          .style("font-size", "8px");
+      });
+
+    // Update positions of elements on each simulation tick
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (d) => (d.source as Node).x || 0)
+        .attr("y1", (d) => (d.source as Node).y || 0)
+        .attr("x2", (d) => (d.target as Node).x || 0)
+        .attr("y2", (d) => (d.target as Node).y || 0);
+
+      node.attr("cx", (d) => d.x || 0).attr("cy", (d) => d.y || 0);
+
+      labels.attr("x", (d) => d.x || 0).attr("y", (d) => d.y || 0);
+
+      degreeText.attr("x", (d) => d.x || 0).attr("y", (d) => d.y || 0);
+    });
+
+    // Define drag behavior for nodes
+    function drag(
+      simulation: d3.Simulation<Node, d3.SimulationLinkDatum<Node>>,
+    ) {
+      function dragstarted(event: d3.D3DragEvent<Element, Node, any>) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+      }
+
+      function dragged(event: d3.D3DragEvent<Element, Node, any>) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      }
+
+      function dragended(event: d3.D3DragEvent<Element, Node, any>) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+      }
+
+      return d3
+        .drag<Element, Node>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    }
+
+    // Define zoom behavior for the entire graph
+    const zoomBehavior = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 8]) // Allow zooming from 10% to 800%
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform); // Apply the zoom and pan transform to the group
+      });
+
+    // Apply the zoom behavior to the SVG
+    svg.call(zoomBehavior);
+
+    // Cleanup function for useEffect
+    return () => {
+      simulation.stop(); // Stop the simulation to prevent memory leaks
+    };
+  }, [dimensions.width, dimensions.height, currentGraphData]); // Re-run effect if dimensions or graph data change
 
   return (
-    <div className="App">
-      <IdList
-        uniqueIds={allUniqueIds}
-        onIdClick={handleIdListClick}
-        onShowAllGraph={handleShowAllGraph}
-        selectedIds={selectedIds}
-      />
-      <div
-        style={{
-          marginLeft: "200px",
-          width: "calc(100vw - 200px)",
-          height: "100vh",
-          overflow: "hidden",
-        }}
-      >
-        <ForceGraph
-          data={generateGraphData}
-          onNodeClick={handleNodeClickInGraph}
-        />
+    <div className="flex flex-col items-center justify-center w-screen h-screen bg-gray-100 font-inter">
+      <div className="flex w-full h-full bg-white rounded-lg shadow-xl overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-1/4 p-4 border-r border-gray-200 overflow-y-auto">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">Sources</h2>
+          {/* Search Bar */}
+          <input
+            type="text"
+            placeholder="Search sources..."
+            className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            onClick={() => setSelectedSourceId(null)}
+            className={`w-full text-left p-2 mb-2 rounded-md transition-colors duration-200
+              ${selectedSourceId === null ? "bg-blue-500 text-white shadow-md" : "bg-gray-200 text-gray-700 hover:bg-blue-100 hover:text-blue-700"}`}
+          >
+            Show All
+          </button>
+          {filteredUniqueSourceIds.map((sourceId) => (
+            <button
+              key={sourceId}
+              onClick={() => setSelectedSourceId(sourceId)}
+              className={`w-full text-left p-2 mb-2 rounded-md transition-colors duration-200
+                ${selectedSourceId === sourceId ? "bg-blue-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600"}`}
+            >
+              {sourceId}
+            </button>
+          ))}
+        </div>
+
+        {/* Graph Container */}
+        <div className="flex-1 relative">
+          <svg ref={svgRef} className="w-full h-full"></svg>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default App;
