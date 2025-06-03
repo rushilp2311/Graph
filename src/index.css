@@ -1,5 +1,5 @@
 /* src/components/IdList.css */
-
+@import "tailwindcss";
 .id-list-container {
     width: 200px;
     height: 100vh;
