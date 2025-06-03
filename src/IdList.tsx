@@ -1,9 +1,20 @@
-import React, { useState } from "react";
-// Make sure this CSS file exists for styling
+// src/components/IdList.tsx
+import React from "react";
 
-const IdList = ({ uniqueIds, onIdClick, onShowAllGraph, selectedIds }) => {
-  // No searchId state or search functionality here anymore
+// Define the interface for IdList's props
+interface IdListProps {
+  uniqueIds: number[];
+  onIdClick: (id: number) => void;
+  onShowAllGraph: () => void;
+  selectedIds: number[];
+}
 
+const IdList: React.FC<IdListProps> = ({
+  uniqueIds,
+  onIdClick,
+  onShowAllGraph,
+  selectedIds,
+}) => {
   return (
     <div className="id-list-container">
       <div className="id-list-header">
@@ -14,15 +25,19 @@ const IdList = ({ uniqueIds, onIdClick, onShowAllGraph, selectedIds }) => {
       </div>
 
       <ul className="id-list">
-        {uniqueIds.map((id) => (
-          <li
-            key={id}
-            className={`id-list-item ${selectedIds.includes(id) ? "selected" : ""}`}
-            onClick={() => onIdClick(id)}
-          >
-            {id}
-          </li>
-        ))}
+        {uniqueIds.map(
+          (
+            id: number, // Type id in map callback
+          ) => (
+            <li
+              key={id}
+              className={`id-list-item ${selectedIds.includes(id) ? "selected" : ""}`}
+              onClick={() => onIdClick(id)}
+            >
+              {id}
+            </li>
+          ),
+        )}
       </ul>
     </div>
   );

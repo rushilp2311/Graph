@@ -1,10 +1,18 @@
+// src/App.tsx
 import React, { useState, useMemo, useCallback } from "react";
 import ForceGraph from "./ForceGraph";
 import IdList from "./IdList";
 import "./App.css";
+import {
+  type GraphNode,
+  type Link,
+  type GraphData,
+  type IdRelationships,
+} from "./types"; // Import types
 
-function App() {
-  const idRelationships = {
+function App(): any {
+  // Use IdRelationships interface for idRelationships
+  const idRelationships: IdRelationships = {
     5: new Set([57, 296, 377]),
     57: new Set([5, 296, 506]),
     296: new Set([5, 34, 57]),
@@ -199,33 +207,34 @@ function App() {
     682: new Set([638, 681]),
   };
 
-  const [selectedIds, setSelectedIds] = useState([]); // For graph expansion
+  const [selectedIds, setSelectedIds] = useState<number[]>([]); // Type state as array of numbers
 
-  // Extract all unique IDs for the search list
-  const allUniqueIds = useMemo(() => {
-    const ids = new Set();
+  const allUniqueIds = useMemo<number[]>(() => {
+    // Type useMemo return
+    const ids = new Set<number>(); // Type Set
     for (const sourceIdStr in idRelationships) {
       ids.add(parseInt(sourceIdStr));
-      idRelationships[sourceIdStr].forEach((targetId) => ids.add(targetId));
+      idRelationships[sourceIdStr].forEach((targetId: number) =>
+        ids.add(targetId),
+      ); // Type targetId
     }
     return Array.from(ids).sort((a, b) => a - b);
   }, [idRelationships]);
 
-  // Function to generate the graph data (nodes and links) based on selectedIds
-  const generateGraphData = useMemo(() => {
-    const nodes = [];
-    const links = [];
-    const nodeIdsInSubgraph = new Set(); // To track nodes already added to the subgraph
+  const generateGraphData = useMemo<GraphData>(() => {
+    // Type useMemo return as GraphData
+    const nodes: GraphNode[] = []; // Type nodes array
+    const links: Link[] = []; // Type links array
+    const nodeIdsInSubgraph = new Set<number>();
 
     if (selectedIds.length === 0) {
-      // If no IDs are selected, show the full graph
       for (const sourceIdStr in idRelationships) {
         const sourceId = parseInt(sourceIdStr);
         if (!nodeIdsInSubgraph.has(sourceId)) {
           nodes.push({ id: sourceId });
           nodeIdsInSubgraph.add(sourceId);
         }
-        idRelationships[sourceIdStr].forEach((targetId) => {
+        idRelationships[sourceIdStr].forEach((targetId: number) => {
           if (!nodeIdsInSubgraph.has(targetId)) {
             nodes.push({ id: targetId });
             nodeIdsInSubgraph.add(targetId);
@@ -241,11 +250,11 @@ function App() {
         });
       }
     } else {
-      // If IDs are selected, build a subgraph including them and their direct connections
-      const nodesToProcess = new Set(selectedIds);
-      const visitedNodes = new Set(); // Prevent infinite loops in circular relationships
+      const nodesToProcess = new Set<number>(selectedIds);
+      const visitedNodes = new Set<number>();
 
-      nodesToProcess.forEach((mainId) => {
+      nodesToProcess.forEach((mainId: number) => {
+        // Type mainId
         if (visitedNodes.has(mainId)) return;
         visitedNodes.add(mainId);
 
@@ -254,9 +263,9 @@ function App() {
           nodeIdsInSubgraph.add(mainId);
         }
 
-        // Add outgoing connections
-        const connectedFromMain = idRelationships[mainId] || new Set();
-        connectedFromMain.forEach((targetId) => {
+        const connectedFromMain = idRelationships[mainId] || new Set<number>();
+        connectedFromMain.forEach((targetId: number) => {
+          // Type targetId
           if (!nodeIdsInSubgraph.has(targetId)) {
             nodes.push({ id: targetId });
             nodeIdsInSubgraph.add(targetId);
@@ -271,7 +280,6 @@ function App() {
           }
         });
 
-        // Add incoming connections (where mainId is a target)
         for (const sourceIdStr in idRelationships) {
           const sourceId = parseInt(sourceIdStr);
           if (idRelationships[sourceIdStr].has(mainId) && sourceId !== mainId) {
@@ -294,18 +302,17 @@ function App() {
     return { nodes, links };
   }, [selectedIds, idRelationships]);
 
-  // Handler for clicking an ID in the sidebar list (replaces current selection)
-  const handleIdListClick = useCallback((id) => {
-    setSelectedIds([id]); // Select only this ID
+  const handleIdListClick = useCallback((id: number) => {
+    // Type id
+    setSelectedIds([id]);
   }, []);
 
-  // Handler for "Show All Graph" button
   const handleShowAllGraph = useCallback(() => {
-    setSelectedIds([]); // Clear selection to show full graph
+    setSelectedIds([]);
   }, []);
 
-  // Handler for clicking a node in the ForceGraph (expands selection)
-  const handleNodeClickInGraph = useCallback((nodeId) => {
+  const handleNodeClickInGraph = useCallback((nodeId: number) => {
+    // Type nodeId
     setSelectedIds((prevSelectedIds) => {
       if (prevSelectedIds.includes(nodeId)) {
         return prevSelectedIds.filter((id) => id !== nodeId);
