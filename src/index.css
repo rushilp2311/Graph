@@ -1,0 +1,77 @@
+/* src/components/IdList.css */
+
+.id-list-container {
+    width: 200px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: #f4f4f4;
+    border-right: 1px solid #ccc;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto; /* Enable scrolling for long lists */
+    font-family: Arial, sans-serif;
+}
+
+.id-list-header {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.id-list-header h2 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.show-all-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+    width: 100%; /* Make button full width */
+    box-sizing: border-box;
+}
+
+.show-all-button:hover {
+    background-color: #0056b3;
+}
+
+.id-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.id-list-item {
+    padding: 8px 10px;
+    margin-bottom: 5px;
+    background-color: #e9e9e9;
+    border-radius: 4px;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        transform 0.1s ease;
+    font-size: 0.9em;
+    color: #333;
+}
+
+.id-list-item:hover {
+    background-color: #dcdcdc;
+    transform: translateX(3px); /* Slight movement on hover */
+}
+
+.id-list-item.selected {
+    background-color: #28a745; /* Green for selected items */
+    color: white;
+    font-weight: bold;
+}
+
+.id-list-item.selected:hover {
+    background-color: #218838; /* Darker green on hover for selected */
+}
